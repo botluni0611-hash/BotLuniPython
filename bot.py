@@ -22,7 +22,7 @@ HEADERS = {
 }
 
 # ==========================================
-# 🌐 SERVIDOR FALSO PARA ENGAÑAR A RENDER
+# 🌐 SERVIDOR WEB FALSO (PARA ENGAÑAR A RENDER)
 # ==========================================
 
 class ServidorFalso(BaseHTTPRequestHandler):
@@ -30,15 +30,12 @@ class ServidorFalso(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        self.wfile.write(b"Bot Luni esta vivo y operando en Render!")
-        
-    def log_message(self, format, *args):
-        pass # Evita llenar la consola de registros innecesarios cuando el ping visite la web
+        self.wfile.write(b"Bot Luni esta vivo y enganando a Render!")
 
 def mantener_vivo():
-    # Render asigna automáticamente un puerto en la variable de entorno PORT
     puerto = int(os.environ.get("PORT", 10000))
     httpd = HTTPServer(('0.0.0.0', puerto), ServidorFalso)
+    print(f"🌐 Servidor falso escuchando en el puerto {puerto}...")
     httpd.serve_forever()
 
 # ==========================================
@@ -206,7 +203,7 @@ def generar_mensaje_pendientes(guerra, es_automatico=True):
         if faltan > 0:
             todos_atacaron = False
             emoji = "🌕" if faltan == 2 else "🌗"
-            if ataques_permitidos == 1: emoji = "🌕" 
+            if ataques_permitidos == 1: emoji = "🌕"
             
             msg += f"#{m.get('mapPosition')} {m.get('name')} | {faltan}{emoji}\n"
             
@@ -407,6 +404,11 @@ def procesar_mensajes():
                         elif comando == "!resultados": enviar_whatsapp(chat_id, cmd_resultados())
                         elif comando == "!ataques": enviar_whatsapp(chat_id, cmd_ataques())
                         elif comando == "!ip": enviar_whatsapp(chat_id, f"🌐 Mi IP local es: {requests.get('https://api.ipify.org').text}")
+                        # NUEVO COMANDO TÁCTICO PARA SUPERCELL
+                        elif comando.startswith("!token "):
+                            nuevo_token = texto.replace("!token ", "").strip()
+                            HEADERS["Authorization"] = f"Bearer {nuevo_token}"
+                            enviar_whatsapp(chat_id, "✅ Token de Supercell actualizado en caliente. Luni está listo para la guerra.")
 
                 borrar_notificacion(receipt_id)
 
@@ -416,8 +418,8 @@ def procesar_mensajes():
         time.sleep(3) 
 
 if __name__ == "__main__":
-    # 1. Inicia el servidor falso para Render en segundo plano
+    # 1. Abre el puerto de internet falso en un hilo paralelo para calmar a Render
     threading.Thread(target=mantener_vivo, daemon=True).start()
     
-    # 2. Inicia el escaneo real de Clash of Clans y WhatsApp
+    # 2. Inicia el escaneo del bot normalmente
     procesar_mensajes()
