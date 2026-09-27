@@ -1,6 +1,8 @@
 import os
 import time
 import requests
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -18,6 +20,26 @@ HEADERS = {
     "Authorization": f"Bearer {COC_TOKEN}",
     "Accept": "application/json"
 }
+
+# ==========================================
+# 🌐 SERVIDOR FALSO PARA ENGAÑAR A RENDER
+# ==========================================
+
+class ServidorFalso(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b"Bot Luni esta vivo y operando en Render!")
+        
+    def log_message(self, format, *args):
+        pass # Evita llenar la consola de registros innecesarios cuando el ping visite la web
+
+def mantener_vivo():
+    # Render asigna automáticamente un puerto en la variable de entorno PORT
+    puerto = int(os.environ.get("PORT", 10000))
+    httpd = HTTPServer(('0.0.0.0', puerto), ServidorFalso)
+    httpd.serve_forever()
 
 # ==========================================
 # 🧠 MEMORIA DEL VIGILANTE
@@ -183,9 +205,8 @@ def generar_mensaje_pendientes(guerra, es_automatico=True):
         faltan = ataques_permitidos - len(m.get("attacks", []))
         if faltan > 0:
             todos_atacaron = False
-            # Asignamos las lunas visuales
             emoji = "🌕" if faltan == 2 else "🌗"
-            if ataques_permitidos == 1: emoji = "🌕" # Para liga 1 ataque vale luna llena
+            if ataques_permitidos == 1: emoji = "🌕" 
             
             msg += f"#{m.get('mapPosition')} {m.get('name')} | {faltan}{emoji}\n"
             
@@ -298,7 +319,6 @@ def verificar_cambios_guerra():
                 f_obj = datetime.strptime(guerra["endTime"], "%Y%m%dT%H%M%S.%fZ").replace(tzinfo=timezone.utc)
                 restante = (f_obj - datetime.now(timezone.utc)).total_seconds()
                 
-                # Se envía el mensaje automático de 5 horas SOLO si no es guerra perfecta
                 if 0 < restante <= 18000:
                     if mi_clan.get('stars', 0) < max_estrellas:
                         enviar_autonomo(generar_mensaje_pendientes(guerra, es_automatico=True))
@@ -347,8 +367,6 @@ def cmd_ataques():
     estado = guerra.get("state")
     if estado == "notInWar": return "🌙 No hay guerra activa."
     if estado == "preparation": return "🌙 La guerra está en fase de *Preparación*. Todos los ataques están pendientes."
-    
-    # Genera el reporte de pendientes forzando el formato de respuesta manual
     return generar_mensaje_pendientes(guerra, es_automatico=False)
 
 # ==========================================
@@ -398,4 +416,8 @@ def procesar_mensajes():
         time.sleep(3) 
 
 if __name__ == "__main__":
+    # 1. Inicia el servidor falso para Render en segundo plano
+    threading.Thread(target=mantener_vivo, daemon=True).start()
+    
+    # 2. Inicia el escaneo real de Clash of Clans y WhatsApp
     procesar_mensajes()
