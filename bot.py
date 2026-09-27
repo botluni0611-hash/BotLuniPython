@@ -345,11 +345,28 @@ def cmd_guerra():
     
     mi_clan, rival = guerra.get("clan", {}), guerra.get("opponent", {})
     
+    # Llamamos a la función que calcula los espejos y asigna las lunas
+    analisis_th = generar_analisis_th(mi_clan, rival)
+    
     if estado == "preparation":
         tiempo = calcular_tiempo(guerra.get("startTime"))
-        return f"⏳ *FASE DE PREPARACIÓN* ⏳\n\n⚔️ *{mi_clan.get('name')}* vs *{rival.get('name')}*\n\n⏳ La batalla *COMIENZA* en: *{tiempo}*\n\n¡Preparen sus aldeas!"
+        msg = (f"⏳ *FASE DE PREPARACIÓN* ⏳\n\n"
+               f"⚔️ *{mi_clan.get('name')}* vs *{rival.get('name')}*\n\n"
+               f"⏳ La batalla *COMIENZA* en: *{tiempo}*\n"
+               f"────────────────\n"
+               f"✨ Balance de Ayuntamientos (TH)\n\n"
+               f"{analisis_th}\n\n"
+               f"¡Preparen sus aldeas!")
+        return msg
     
-    msg = f"🔥 *ESTADO DE LA GUERRA* 🔥\n\n🏰 *{mi_clan.get('name')}*: {mi_clan.get('stars', 0)} ⭐ ({mi_clan.get('destructionPercentage', 0):.2f}%)\n🆚\n🏰 *{rival.get('name')}*: {rival.get('stars', 0)} ⭐ ({rival.get('destructionPercentage', 0):.2f}%)\n\n⚔️ Usa !resultados para ver los detalles."
+    msg = (f"🔥 *ESTADO DE LA GUERRA* 🔥\n\n"
+           f"🏰 *{mi_clan.get('name')}*: {mi_clan.get('stars', 0)} ⭐ ({mi_clan.get('destructionPercentage', 0):.2f}%)\n"
+           f"🆚\n"
+           f"🏰 *{rival.get('name')}*: {rival.get('stars', 0)} ⭐ ({rival.get('destructionPercentage', 0):.2f}%)\n"
+           f"────────────────\n"
+           f"✨ Balance de Ayuntamientos (TH)\n\n"
+           f"{analisis_th}\n\n"
+           f"⚔️ Usa !resultados para ver el detalle por jugador.")
     return msg
 
 def cmd_resultados():
